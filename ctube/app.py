@@ -5,7 +5,7 @@ from pprint import pprint
 from typing import Any, Collection, Dict, List, Optional
 
 from autolink import linkify
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -237,9 +237,18 @@ async def watch(request: Request, v: str):
     info = await DOWNLOADER.video_info(video_id)
     await STORE.record_seen(info)
 
-    params = {**info, "request": request}
-    return TEMPLATES.TemplateResponse("watch.html.jinja", params)
+    # Get the best quality video URL
+    video_url = next((f['url'] for f in info['formats'] if f.get('vcodec') != 'none' and f.get('acodec') != 'none'), None)
 
+    if not video_url:
+        raise HTTPException(status_code=404, detail="No suitable video format found")
+
+    params = {
+        **info,
+        "request": request,
+        "video_url": video_url  # Add the video URL to the template parameters
+    }
+    return TEMPLATES.TemplateResponse("watch.html.jinja", params)
 
 @APP.get("/comments", response_class=HTMLResponse)
 async def comments(request: Request, video_id: str, page: int = 1):
