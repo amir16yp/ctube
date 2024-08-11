@@ -22,26 +22,21 @@ class Store:
         init=False, default=None,
     )
 
-
     def __post_init__(self) -> None:
         self.seen_file.parent.mkdir(parents=True, exist_ok=True)
         self.tags_file.parent.mkdir(parents=True, exist_ok=True)
-
 
     @property
     def folder(self) -> Path:
         return Path(user_data_dir("ctube", roaming=True))
 
-
     @property
     def seen_file(self) -> Path:
         return self.folder / "seen.json"
 
-
     @property
     def tags_file(self) -> Path:
         return self.folder / "tags.json"
-
 
     @property
     def seen(self) -> Dict[str, datetime]:
@@ -57,7 +52,6 @@ class Store:
 
         return self._seen
 
-
     @property
     def tags(self) -> Dict[str, List[datetime]]:
         if self._tags is None:
@@ -72,18 +66,17 @@ class Store:
 
         return self._tags
 
-
     async def record_seen(self, video_info: Dict[str, Any]) -> None:
-        video_id            = video_info["id"]
-        last_update         = self.seen.get(video_id, ZERO_DATE)
+        video_id = video_info["id"]
+        last_update = self.seen.get(video_id, ZERO_DATE)
         self.seen[video_id] = datetime.now()
-        dumped_seen         = json_dumps(self.seen)
+        dumped_seen = json_dumps(self.seen)
 
         async with aiofiles.open(self.seen_file, "w") as file:
             await file.write(dumped_seen)
 
         tags = related_terms(video_info)
-        now  = datetime.now()
+        now = datetime.now()
 
         if (now - last_update).total_seconds() < 60 * 60 * 12:
             print(f"Already updated tags in the past 12 hours for {video_id}")
@@ -99,7 +92,6 @@ class Store:
         async with aiofiles.open(self.tags_file, "w") as file:
             await file.write(dumped_tags)
 
-
     def recommendations_query(self, term_count: int) -> List[str]:
         limit = datetime.now() - timedelta(days=60)
 
@@ -110,6 +102,9 @@ class Store:
                 for nth, time in enumerate(recent_watches, 1)
             )
 
-        tags   = self.tags
+        tags = self.tags
         scores = [score(t, rc) for t, rc in tags.items()]
-        return random.choices(list(tags), scores, k=min(len(tags), term_count))
+        try:
+            return random.choices(list(tags), scores, k=min(len(tags), term_count))
+        except Exception as e:
+            return []

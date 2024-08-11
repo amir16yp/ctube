@@ -10,13 +10,19 @@ def fitting_thumbnail(thumbnails: List[Dict[str, Any]], for_width: int) -> str:
     if not thumbnails:
         return "/static/images/no_thumbnail.png"
 
-    ascending_width = sorted(thumbnails, key=lambda t: t["width"])
+    # Filter out thumbnails without 'width' key
+    valid_thumbnails = [t for t in thumbnails if "width" in t]
+
+    if not valid_thumbnails:
+        return "/static/images/no_thumbnail.png"
+
+    ascending_width = sorted(valid_thumbnails, key=lambda t: t["width"])
 
     for thumb in ascending_width:
         if thumb["width"] >= for_width:
             return thumb["url"]
 
-    return thumbnails[-1]["url"]
+    return valid_thumbnails[-1]["url"]
 
 
 def deduplicate_video_terms(*terms: str) -> List[str]:
