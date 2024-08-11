@@ -1,6 +1,7 @@
 # CTube
 
-A simple self-hosted front-end for YouTube, powered by youtube-dl.
+A simple self-hosted front-end for YouTube, powered by yt-dlp.
+This fork uses yt-dlp instead of youtube-dl.
 
 
 ## Features
