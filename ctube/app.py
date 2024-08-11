@@ -1,6 +1,7 @@
 import asyncio
 import random
 from pathlib import Path
+from pprint import pprint
 from typing import Any, Collection, Dict, List, Optional
 
 from autolink import linkify
@@ -41,10 +42,10 @@ async def entries(
 
     for entry in entries:
         entry.update({
-            "preview_url": "/preview?video_id=%s" % entry["id"],
-            "watch_url": "/watch?v=%s" % entry["id"],
-            "human_duration": format_duration(entry["duration"] or 0),
-            "human_views": format_thousand(entry["view_count"] or 0),
+            "preview_url": f"/preview?video_id={entry['id']}",
+            "watch_url": f"/watch?v={entry['id']}",
+            "human_duration": format_duration(entry.get("duration") or 0),
+            "human_views": format_thousand(entry.get("view_count") or 0),
             "seen_class": "seen" if entry["id"] in STORE.seen else "",
         })
 
@@ -156,6 +157,8 @@ async def home(request: Request, page: int = 1, embedded: bool = False):
         print(f"Error in home route: {str(e)}")
         # Fallback to a default search if an error occurs
         return await results(request, "trending videos", page, embedded=embedded)
+
+
 @APP.get("/results", response_class=HTMLResponse)
 async def results(
         request: Request,
